@@ -21,25 +21,23 @@ class AI
             // Allow 10 requests per minute
         }, 60);
 
-        return $this->client->chat()->create([
-            "model" => "gpt-4o-mini",
-            "messages" => [
-                [
-                    "role" => "system",
-                    "content" => config("openai.system_prompt")
-                ],
-                [
-                    "role" => "user",
-                    "content" => "
-                        Title: `$title` \n
-                        Genre: `$genre` \n
-                        Description: `$description`
-                    "
-                ]
+        return $this->client->responses()->create([
+            "model" => "gpt-5.2",
+            "input" => "
+                Title: `$title` \n
+                Genre: `$genre` \n
+                Description: `$description`
+            ",
+            "instructions" => config("openai.system_prompt"),
+            "reasoning" => [
+                "effort" => "medium"
             ],
-            "response_format" => [
-                "type" => "json_schema",
-                "json_schema" => [
+            "text" => [
+                "verbosity" => "high"
+            ],
+            "output" => [
+                "format" => [
+                    "type" => "json_schema",
                     "name" => "movie-structure-schema",
                     "strict" => true,
                     "schema" => [

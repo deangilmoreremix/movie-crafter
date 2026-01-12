@@ -42,7 +42,7 @@ class GenerateMovie implements ShouldQueue
                 genre: $this->movie->genre,
                 description: $this->movie->description
             );
-            $answer = $result->choices[0]->message->content;
+            $answer = $result->output->content ?? $result->content;
             $parsed = json_decode($answer, true);
             MovieAnswer::query()->create([
                 "answer_raw" => $answer,

@@ -94,7 +94,7 @@ class AI
         ]);
     }
 
-    private function getReasoningEffortForGenre($genre)
+    public function getReasoningEffortForGenre($genre)
     {
         $complexGenres = ['mystery', 'thriller', 'drama', 'fantasy'];
         return in_array(strtolower($genre), $complexGenres) ? 'high' : 'medium';

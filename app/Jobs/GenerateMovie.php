@@ -37,13 +37,50 @@ class GenerateMovie implements ShouldQueue
     {
         try {
             DB::beginTransaction();
+            Log::info('Starting movie generation', [
+                'movie_id' => $this->movie->id,
+                'title' => $this->movie->title,
+                'genre' => $this->movie->genre,
+                'description_length' => strlen($this->movie->description)
+            ]);
+
             $result = $aiService->prompt(
                 title: $this->movie->title,
                 genre: $this->movie->genre,
                 description: $this->movie->description
             );
-            $answer = $result->output->content ?? $result->content;
+
+            // Check for tool calls (not supported in single-turn implementation)
+            if (isset($result->tool_calls) && !empty($result->tool_calls)) {
+                Log::warning('AI response contains tool calls, which are not handled in this implementation', [
+                    'movie_id' => $this->movie->id,
+                    'tool_calls' => $result->tool_calls
+                ]);
+                // For now, continue without tool handling
+            }
+
+            $answer = $result->output->content ?? $result->content ?? '';
+            if (empty($answer)) {
+                throw new \Exception('Empty response from AI service');
+            }
+
             $parsed = json_decode($answer, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::error('JSON decode error', [
+                    'movie_id' => $this->movie->id,
+                    'answer' => $answer,
+                    'error' => json_last_error_msg()
+                ]);
+                throw new \Exception('Invalid JSON response from AI: ' . json_last_error_msg());
+            }
+
+            if (!isset($parsed['scenario']) || !isset($parsed['storyboards']) || !isset($parsed['short_description'])) {
+                Log::error('Missing required fields in AI response', [
+                    'movie_id' => $this->movie->id,
+                    'parsed' => $parsed
+                ]);
+                throw new \Exception('Missing required fields in AI response');
+            }
             MovieAnswer::query()->create([
                 "answer_raw" => $answer,
                 "scenario" => $parsed["scenario"],

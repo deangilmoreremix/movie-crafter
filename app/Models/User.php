@@ -48,4 +48,8 @@ class User extends Authenticatable
     public function movies(){
         return $this->hasMany(Movie::class);
     }
+
+    public function canCreateMovie(){
+        return $this->movies()->count() < 10; // Limit to 10 movies per user
+    }
 }

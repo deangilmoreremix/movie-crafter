@@ -4,11 +4,11 @@ use App\Models\Movie;
 use Illuminate\Validation\Rule;
 use function Laravel\Folio\{middleware, name};
 
-use function Livewire\Volt\{with, state, rules, mount};
+use function Livewire\Volt\{with, state, rules, mount, uses};
 
 name('movies
 .create');
-middleware(['auth', 'verified']);
+middleware(['auth', 'verified', 'throttle:5,1']);
 
 $genreOptions = [
     'action' => 'Action',
@@ -29,13 +29,15 @@ state([
     "genreOptions" => $genreOptions
 ]);
 
+rules([
+    'title' => 'required|string|min:2|max:50',
+    'description' => 'required|string|min:50|max:512',
+    'genre' => 'required|string|in:' . implode(',', array_keys($genreOptions)),
+]);
 
-$generate = function () use ($genreOptions) {
-    $validated = $this->validate([
-        'description' => ['required', 'min:50', 'max:512'],
-        'title' => ['required', 'min:2', 'max:50'],
-        'genre' => ['required', Rule::in(array_keys($genreOptions))]
-    ]);
+
+$generate = function () {
+    $validated = $this->validate();
 
     $movie = Movie::query()->create([
         "uuid" => \Ramsey\Uuid\Uuid::uuid7()->toString(),
@@ -61,6 +63,11 @@ $generate = function () use ($genreOptions) {
 
     </x-slot>
 
+    @if(!auth()->user()->canCreateMovie())
+        <div class="alert alert-warning">
+            You have reached your movie creation limit.
+        </div>
+    @else
 
     @volt('movies
 .create')
@@ -93,4 +100,5 @@ $generate = function () use ($genreOptions) {
         </div>
     </div>
     @endvolt
+    @endif
 </x-layouts.app>

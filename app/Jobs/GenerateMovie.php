@@ -18,6 +18,10 @@ class GenerateMovie implements ShouldQueue
 {
     use Queueable;
 
+    public $tries = 3;
+    public $backoff = [10, 30, 60]; // seconds
+    public $maxExceptions = 3;
+
     /**
      * Create a new job instance.
      */

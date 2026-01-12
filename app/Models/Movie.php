@@ -9,7 +9,14 @@ use Illuminate\Database\Eloquent\Model;
 class Movie extends Model
 {
     use HasFactory;
-    protected $guarded = [];
+    protected $fillable = [
+        'title',
+        'user_id',
+        'genre',
+        'description',
+        'status',
+        'error',
+    ];
 
     protected $casts = [
         "status" => MovieStatus::class

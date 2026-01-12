@@ -9,7 +9,17 @@ class MovieAnswer extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'answer_raw',
+        'scenario',
+        'story_boards',
+        'title',
+        'short_description',
+        'metadata',
+        'error',
+        'is_successful',
+        'movie_id',
+    ];
 
     protected $casts = [
         "story_boards" => "array",

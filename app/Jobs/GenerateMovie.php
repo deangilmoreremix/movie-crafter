@@ -52,9 +52,10 @@ class GenerateMovie implements ShouldQueue
                 "short_description" => $parsed["short_description"],
                 "error" => "",
                 "metadata" => [
-                    "prompt_tokens" => $result->usage->promptTokens,
-                    "completion_tokens" => $result->usage->completionTokens,
-                    "total_tokens" => $result->usage->totalTokens
+                    "prompt_tokens" => $result->usage->promptTokens ?? 0,
+                    "completion_tokens" => $result->usage->completionTokens ?? 0,
+                    "total_tokens" => $result->usage->totalTokens ?? 0,
+                    "creative_notes" => $parsed["creative_notes"] ?? null
                 ],
                 "is_successful" => true,
                 "movie_id" => $this->movie->id

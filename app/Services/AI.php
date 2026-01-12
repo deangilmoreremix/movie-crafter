@@ -21,6 +21,12 @@ class AI
             // Allow 10 requests per minute
         }, 60);
 
+        // Dynamically adjust reasoning effort based on genre complexity
+        $reasoningEffort = $this->getReasoningEffortForGenre($genre);
+
+        // Adjust verbosity based on description length
+        $verbosity = strlen($description) > 200 ? 'high' : 'medium';
+
         return $this->client->responses()->create([
             "model" => "gpt-5.2",
             "input" => "
@@ -28,12 +34,29 @@ class AI
                 Genre: `$genre` \n
                 Description: `$description`
             ",
-            "instructions" => config("openai.system_prompt"),
+            "instructions" => config("openai.system_prompt") . "\n\nBefore generating the movie content, explain your creative approach and key decisions.",
             "reasoning" => [
-                "effort" => "medium"
+                "effort" => $reasoningEffort
             ],
             "text" => [
-                "verbosity" => "high"
+                "verbosity" => $verbosity
+            ],
+            "tools" => [
+                [
+                    "type" => "custom",
+                    "name" => "get_genre_conventions",
+                    "description" => "Get common tropes and conventions for a specific movie genre"
+                ],
+                [
+                    "type" => "custom",
+                    "name" => "analyze_description",
+                    "description" => "Analyze the user's description for key themes and elements"
+                ]
+            ],
+            "tool_choice" => [
+                "type" => "allowed_tools",
+                "mode" => "auto",
+                "tools" => ["get_genre_conventions", "analyze_description"]
             ],
             "output" => [
                 "format" => [
@@ -54,6 +77,9 @@ class AI
                                 "items" => [
                                     "type" => "string"
                                 ],
+                            ],
+                            "creative_notes" => [
+                                "type" => "string"
                             ]
                         ],
                         "required" => [
@@ -66,6 +92,12 @@ class AI
                 ]
             ]
         ]);
+    }
+
+    private function getReasoningEffortForGenre($genre)
+    {
+        $complexGenres = ['mystery', 'thriller', 'drama', 'fantasy'];
+        return in_array(strtolower($genre), $complexGenres) ? 'high' : 'medium';
     }
 
     public function generateStoryboardImage($shortDescription, $storyboardDescription){
